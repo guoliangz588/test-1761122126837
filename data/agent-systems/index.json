@@ -1,0 +1,155 @@
+[
+  {
+    "id": "system_1757299256379_mu0enk1lw",
+    "name": "健康助手多智能体系统",
+    "description": "一个AI驱动的多轮对话系统，旨在收集用户的健康信息（如症状），进行初步评估，并提供相应的建议。系统强调数据结构化和用户友好的交互，能够有效利用现有UI组件。",
+    "agents": [
+      {
+        "id": "main-orchestrator",
+        "name": "主协调器",
+        "type": "orchestrator",
+        "description": "负责理解用户初始意图，并根据意图将请求路由到相应的代理，是整个系统的入口和核心协调者。",
+        "capabilities": [
+          "意图识别",
+          "路由管理",
+          "对话管理"
+        ],
+        "systemPrompt": "您好！我是您的健康助手。请告诉我您有什么健康问题或需要了解的信息？例如，您可以说'我想描述我的症状'或'现在几点了？'",
+        "toolAccess": []
+      },
+      {
+        "id": "symptom-collector",
+        "name": "症状收集器",
+        "type": "tool",
+        "description": "通过结构化表单引导用户输入详细的症状信息，确保数据结构化和完整性，旨在收集12项关键健康信息。",
+        "capabilities": [
+          "症状数据输入",
+          "多轮对话管理",
+          "数据校验"
+        ],
+        "systemPrompt": "请您详细描述一下您的症状。为了更准确地了解情况，请填写以下表单，包括症状的开始时间、性质、伴随症状等关键信息。我会引导您完成12项健康信息的收集。",
+        "toolAccess": [
+          "symptom-input-form"
+        ]
+      },
+      {
+        "id": "symptom-analyzer",
+        "name": "症状分析器",
+        "type": "tool",
+        "description": "接收收集到的症状数据，进行初步的医学知识匹配和风险评估，生成初步评估结果。",
+        "capabilities": [
+          "症状数据分析",
+          "初步评估生成",
+          "风险识别"
+        ],
+        "systemPrompt": "正在根据您提供的信息进行初步分析，请稍候。分析完成后，我将为您展示评估结果和建议。",
+        "toolAccess": []
+      },
+      {
+        "id": "assessment-displayer",
+        "name": "评估结果显示器",
+        "type": "tool",
+        "description": "将症状分析结果和初步评估建议以用户友好的方式展示给用户。",
+        "capabilities": [
+          "结果展示",
+          "建议呈现"
+        ],
+        "systemPrompt": "感谢您的耐心等待。这是根据您的症状进行的初步评估和建议。请注意，这不能替代专业的医疗诊断，如有需要请及时就医。",
+        "toolAccess": [
+          "symptom-assessment-display"
+        ]
+      },
+      {
+        "id": "time-displayer",
+        "name": "时间显示器",
+        "type": "tool",
+        "description": "响应用户查询当前时间的需求，并使用数字时钟组件显示。",
+        "capabilities": [
+          "时间查询",
+          "UI显示"
+        ],
+        "systemPrompt": "好的，这是当前的日期和时间。",
+        "toolAccess": [
+          "digital-clock"
+        ]
+      },
+      {
+        "id": "fallback-agent",
+        "name": "回退处理器",
+        "type": "tool",
+        "description": "处理无法识别的用户意图或超出系统能力范围的请求，并引导用户重新输入或澄清意图。",
+        "capabilities": [
+          "意图澄清",
+          "用户引导"
+        ],
+        "systemPrompt": "抱歉，我暂时无法理解您的请求，或者这超出了我的能力范围。您是想进行症状评估，还是有其他健康问题想咨询？",
+        "toolAccess": []
+      }
+    ],
+    "connections": [
+      {
+        "from": "main-orchestrator",
+        "to": "symptom-collector",
+        "type": "conditional",
+        "condition": "user_intent == 'symptom_assessment' || user_intent == 'health_query'",
+        "description": "当用户意图是进行症状评估或健康咨询时，主协调器将请求路由到症状收集器。"
+      },
+      {
+        "from": "main-orchestrator",
+        "to": "time-displayer",
+        "type": "conditional",
+        "condition": "user_intent == 'query_time'",
+        "description": "当用户意图是查询当前时间时，主协调器将请求路由到时间显示器。"
+      },
+      {
+        "from": "main-orchestrator",
+        "to": "fallback-agent",
+        "type": "conditional",
+        "condition": "user_intent == 'unrecognized'",
+        "description": "当用户意图无法识别时，主协调器将请求路由到回退处理器。"
+      },
+      {
+        "from": "symptom-collector",
+        "to": "symptom-analyzer",
+        "type": "sequential",
+        "description": "症状数据收集完成后，症状收集器将收集到的数据传递给症状分析器进行处理。"
+      },
+      {
+        "from": "symptom-analyzer",
+        "to": "assessment-displayer",
+        "type": "sequential",
+        "description": "症状分析完成后，症状分析器将评估结果传递给评估结果显示器进行展示。"
+      },
+      {
+        "from": "assessment-displayer",
+        "to": "main-orchestrator",
+        "type": "sequential",
+        "description": "评估结果显示后，系统返回主协调器，等待用户进一步的指令或结束对话。"
+      },
+      {
+        "from": "time-displayer",
+        "to": "main-orchestrator",
+        "type": "sequential",
+        "description": "时间显示后，系统返回主协调器，等待用户进一步的指令或结束对话。"
+      },
+      {
+        "from": "fallback-agent",
+        "to": "main-orchestrator",
+        "type": "sequential",
+        "description": "回退处理器处理后，系统返回主协调器，尝试重新理解用户意图。"
+      }
+    ],
+    "uiTools": [
+      "digital-clock",
+      "symptom-assessment-display",
+      "symptom-input-form"
+    ],
+    "pendingUIRequirements": [],
+    "status": "pending",
+    "metadata": {
+      "createdAt": "2025-09-08T02:40:56.379Z",
+      "createdBy": "system-designer",
+      "version": "1.0.0"
+    }
+  }
+]
