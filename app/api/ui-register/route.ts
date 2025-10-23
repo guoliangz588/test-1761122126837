@@ -153,6 +153,19 @@ ${data.code}
 // GET method to list all registered UI tools by scanning the pages directory
 export async function GET() {
   try {
+     // 1) Prefer manifest file (data/ui-tools/index.json)
+    const manifestFile = path.join(process.cwd(), 'data', 'ui-tools', 'index.json');
+    try {
+      const manifestRaw = await fs.readFile(manifestFile, 'utf-8');
+      const parsed = JSON.parse(manifestRaw);
+      const toolsFromManifest = Array.isArray(parsed)
+        ? parsed
+        : Array.isArray(parsed?.tools) ? parsed.tools : [];
+      return NextResponse.json({ success: true, tools: toolsFromManifest, count: toolsFromManifest.length });
+    } catch (e) {
+      // Fallback to legacy pages scan
+    }
+
     const pagesDir = path.join(process.cwd(), 'pages');
     const tools = [];
 
@@ -287,4 +300,5 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     );
   }
+
 }
