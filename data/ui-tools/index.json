@@ -22,7 +22,8 @@
     },
     {
       "id": "yellow-clock",
-      "name": "Yellow Clock"
+      "name": "Yellow Clock",
+      "description": "A yellow-themed UI component that displays the current time."
     }
   ]
 }
